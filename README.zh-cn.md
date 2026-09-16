@@ -230,7 +230,7 @@ Oracle 数据脱敏在查询时**屏蔽敏感数据**，而不修改底层数据
 | 组件 | 版本/要求 | 备注 |
 |-----------|-------------------|-------|
 | Oracle 数据库 | 11gR2 或更高版本 | DBMS_CRYPTO 包从 10g 起可用 |
-| 应用程序运行时 | 任意（Java、Python、Node.js 等） | 由您选择的语言 |
+| 应用程序运行时 | 任意（Java、Python、C# 等） | 由您选择的语言 |
 | 密钥管理 | 外部（HSM、HashiCorp Vault 等） | 切勿将密钥存储在数据库中 |
 | Oracle 钱包（可选） | 用于客户端密钥存储 | 推荐用于生产环境 |
 
@@ -419,7 +419,7 @@ Oracle 数据脱敏在查询时**屏蔽敏感数据**，而不修改底层数据
 |-------|------|-------------|
 | Python 加密 | `samples/python/` | 使用 cryptography 库的 Python 示例 |
 | Java 加密 | `samples/java/` | 使用 javax.crypto 的 Java 示例 |
-| Node.js 加密 | `samples/nodejs/` | 使用 crypto 模块的 Node.js 示例 |
+| C# 加密 | `samples/csharp/` | 使用 Oracle Crypto SDK 的 C# 示例 |
 | 密钥管理 | `samples/key-management/` | 安全密钥处理模式 |
 
 ### 快速 Python 示例

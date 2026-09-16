@@ -229,7 +229,7 @@ Is the data sensitive (PII, financial, health, etc.)?
 | Component | Version/Requirement | Notes |
 |-----------|-------------------|-------|
 | Oracle Database | 11gR2 or later | DBMS_CRYPTO package available from 10g |
-| Application Runtime | Any (Java, Python, Node.js, etc.) | Your choice of language |
+| Application Runtime | Any (Java, Python, C#, etc.) | Your choice of language |
 | Key Management | External (HSM, HashiCorp Vault, etc.) | Never store keys in the database |
 | Oracle Wallet (optional) | For client-side key storage | Recommended for production |
 
@@ -419,7 +419,7 @@ This section provides practical code examples for implementing application-level
 |-------|------|-------------|
 | Python Encryption | `samples/python/` | Python examples using cryptography library |
 | Java Encryption | `samples/java/` | Java examples using javax.crypto |
-| Node.js Encryption | `samples/nodejs/` | Node.js examples using crypto module |
+| C# Encryption | `samples/csharp/` | C# examples using Oracle Crypto SDK |
 | Key Management | `samples/key-management/` | Secure key handling patterns |
 
 ### Quick Python Example
