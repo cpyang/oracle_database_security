@@ -419,8 +419,7 @@ Oracle 数据脱敏在查询时**屏蔽敏感数据**，而不修改底层数据
 |-------|------|-------------|
 | Python 加密 | `samples/python/` | 使用 cryptography 库的 Python 示例 |
 | Java 加密 | `samples/java/` | 使用 javax.crypto 的 Java 示例 |
-| C# 加密 | `samples/csharp/` | 使用 Oracle Crypto SDK 的 C# 示例 |
-| 密钥管理 | `samples/key-management/` | 安全密钥处理模式 |
+| C# 加密 | `samples/csharp/` | 使用 System.Security.Cryptography 的 C# 示例 |
 
 ### 快速 Python 示例
 
@@ -463,51 +462,53 @@ plaintext = cipher.decrypt(ciphertext)
 | 数据脱敏 | `scripts/redaction/setup_redaction.sql` | 数据脱敏策略设置 |
 | 策略管理 | `scripts/redaction/redaction_policies.sql` | 创建和管理脱敏策略 |
 
-### 快速 TDE 设置
+### 快速 TDE 配置
 
 ```sql
--- 1. 在 sqlnet.ora 中设置钱包位置
-ENCRYPTION_WALLET_LOCATION=(
-  SOURCE=(METHOD=OKV)(METHOD_DATA=(
-    (OKV_SERVER=your-key-server)(OKV_PORT=1521)))
+-- 1. 配置并打开钱包
+ADMINISTER KEY MANAGEMENT CREATE KEYSTORE '/opt/oracle/wallets/tde'
+  IDENTIFIED BY 'YourStrongWalletPassword';
 
--- 2. 打开钱包
-ALTER SYSTEM SET WALLET OPEN IDENTIFIED BY "your-wallet-password";
+ADMINISTER KEY MANAGEMENT SET KEYSTORE OPEN
+  IDENTIFIED BY 'YourStrongWalletPassword';
 
--- 3. 创建 TDE 主密钥
-ALTER SYSTEM SET ENCRYPTION KEY IDENTIFIED BY "your-wallet-password";
+-- 2. 创建 TDE 主密钥
+ADMINISTER KEY MANAGEMENT CREATE ENCRYPTION KEY
+  IDENTIFIED BY 'YourStrongWalletPassword'
+  WITH BACKUP USING 'TDE_Key_Backup';
 
--- 4. 加密列
-ALTER TABLE customers MODIFY (ssn ENCRYPT);
+-- 3. 加密列（ALTER TABLE ... ENCRYPT）
+-- 完整示例请参阅 scripts/tde/column_tde.sql
 ```
 
-### 快速标签安全设置
+### 快速标签安全配置
 
 ```sql
 -- 1. 创建标签安全策略
 BEGIN
-  DBMS_LABEL.CREATE_POLICY(
-    policy_name => 'HR_POLICY',
-    short_name  => 'HR');
+  DBMS_MACADM.CREATE_PROTECTION(
+    protection_name => 'OLS_PROTECTION',
+    description     => 'OLS 标签安全策略');
 END;
 /
 
--- 2. 创建标签
+-- 2. 为策略创建标签
 BEGIN
-  DBMS_LABEL.CREATE_LABEL(
+  DBMS_MACADM.CREATE_LABEL(
     policy_name => 'HR_POLICY',
     label_tag   => 10,
     label_value => 'CONFIDENTIAL');
 END;
 /
 
--- 3. 将标签应用到表
+-- 3. 为数据库启用标签安全
 BEGIN
-  DBMS_DLP.CREATE_POLICY(
-    policy_name => 'HR_POLICY');
+  DBMS_MACADM.ENABLE_AUTHENTICATION;
 END;
 /
 ```
+
+完整配置请参阅 `scripts/ols/setup_ols.sql`。
 
 ### 快速数据脱敏设置
 

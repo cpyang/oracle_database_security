@@ -419,8 +419,7 @@ This section provides practical code examples for implementing application-level
 |-------|------|-------------|
 | Python Encryption | `samples/python/` | Python examples using cryptography library |
 | Java Encryption | `samples/java/` | Java examples using javax.crypto |
-| C# Encryption | `samples/csharp/` | C# examples using Oracle Crypto SDK |
-| Key Management | `samples/key-management/` | Secure key handling patterns |
+| C# Encryption | `samples/csharp/` | C# examples using System.Security.Cryptography |
 
 ### Quick Python Example
 
@@ -466,19 +465,20 @@ This section covers TDE configuration, management, and operational procedures fo
 ### Quick TDE Setup
 
 ```sql
--- 1. Set the wallet location in sqlnet.ora
-ENCRYPTION_WALLET_LOCATION=(
-  SOURCE=(METHOD=OKV)(METHOD_DATA=
-    (OKV_SERVER=your-key-server)(OKV_PORT=1521)))
+-- 1. Configure and open the wallet
+ADMINISTER KEY MANAGEMENT CREATE KEYSTORE '/opt/oracle/wallets/tde'
+  IDENTIFIED BY 'YourStrongWalletPassword';
 
--- 2. Open the wallet
-ALTER SYSTEM SET WALLET OPEN IDENTIFIED BY "your-wallet-password";
+ADMINISTER KEY MANAGEMENT SET KEYSTORE OPEN
+  IDENTIFIED BY 'YourStrongWalletPassword';
 
--- 3. Create a TDE master key
-ALTER SYSTEM SET ENCRYPTION KEY IDENTIFIED BY "your-wallet-password";
+-- 2. Create a TDE master key
+ADMINISTER KEY MANAGEMENT CREATE ENCRYPTION KEY
+  IDENTIFIED BY 'YourStrongWalletPassword'
+  WITH BACKUP USING 'TDE_Key_Backup';
 
--- 4. Encrypt a column
-ALTER TABLE customers MODIFY (ssn ENCRYPT);
+-- 3. Encrypt a column (ALTER TABLE ... ENCRYPT)
+-- See scripts/tde/column_tde.sql for full example
 ```
 
 ### Quick Label Security Setup
@@ -486,28 +486,29 @@ ALTER TABLE customers MODIFY (ssn ENCRYPT);
 ```sql
 -- 1. Create a label security policy
 BEGIN
-  DBMS_LABEL.CREATE_POLICY(
-    policy_name => 'HR_POLICY',
-    short_name  => 'HR');
+  DBMS_MACADM.CREATE_PROTECTION(
+    protection_name => 'OLS_PROTECTION',
+    description     => 'OLS Label Security Protection');
 END;
 /
 
--- 2. Create labels
+-- 2. Create labels for the policy
 BEGIN
-  DBMS_LABEL.CREATE_LABEL(
+  DBMS_MACADM.CREATE_LABEL(
     policy_name => 'HR_POLICY',
     label_tag   => 10,
     label_value => 'CONFIDENTIAL');
 END;
 /
 
--- 3. Apply label to table
+-- 3. Enable Label Security for the database
 BEGIN
-  DBMS_DLP.CREATE_POLICY(
-    policy_name => 'HR_POLICY');
+  DBMS_MACADM.ENABLE_AUTHENTICATION;
 END;
 /
 ```
+
+See `scripts/ols/setup_ols.sql` for complete Label Security configuration.
 
 ### Quick Data Redaction Setup
 
