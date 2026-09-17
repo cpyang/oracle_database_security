@@ -136,8 +136,8 @@ public class OracleIntegration {
                      "WHEN MATCHED THEN UPDATE SET " + columnName + " = ? " +
                      "WHEN NOT MATCHED THEN INSERT (id, " + columnName + ") VALUES (?, ?)";
 
-        try (var connection = getOracleConnection();
-             var statement = connection.prepareStatement(sql)) {
+        try (java.sql.Connection connection = getOracleConnection();
+             java.sql.PreparedStatement statement = (java.sql.PreparedStatement) connection.prepareStatement(sql)) {
 
             statement.setString(1, rowId);
             statement.setString(2, encrypted);
@@ -163,11 +163,11 @@ public class OracleIntegration {
     public String fetchAndDecrypt(String tableName, String columnName, String rowId) {
         String sql = "SELECT " + columnName + " FROM " + tableName + " WHERE id = ?";
 
-        try (var connection = getOracleConnection();
-             var statement = connection.prepareStatement(sql)) {
+        try (java.sql.Connection connection = getOracleConnection();
+             java.sql.PreparedStatement statement = (java.sql.PreparedStatement) connection.prepareStatement(sql)) {
 
             statement.setString(1, rowId);
-            var resultSet = statement.executeQuery();
+            java.sql.ResultSet resultSet = statement.executeQuery();
 
             if (resultSet.next()) {
                 String encrypted = resultSet.getString(1);
@@ -201,12 +201,32 @@ public class OracleIntegration {
     }
 
     /**
+     * Executes a raw SQL statement (CREATE, DROP, etc.).
+     *
+     * @param sql The SQL statement to execute
+     */
+    public void executeSql(String sql) throws Exception {
+        try (java.sql.Connection connection = getOracleConnection();
+             java.sql.Statement statement = connection.createStatement()) {
+            statement.execute(sql);
+        }
+    }
+
+    private static String repeat(String s, int count) {
+        StringBuilder sb = new StringBuilder(s.length() * count);
+        for (int i = 0; i < count; i++) {
+            sb.append(s);
+        }
+        return sb.toString();
+    }
+
+    /**
      * Demonstrates Oracle database encryption integration.
      */
     public static void main(String[] args) {
-        System.out.println("=".repeat(60));
+        System.out.println(repeat("=", 60));
         System.out.println("Oracle Database Encryption Integration Demo");
-        System.out.println("=".repeat(60));
+        System.out.println(repeat("=", 60));
 
         try {
             // Create encryption manager
@@ -224,12 +244,12 @@ public class OracleIntegration {
 
             System.out.println("\nKey: " + manager.getKey());
 
-            System.out.println("\n" + "=".repeat(60));
+            System.out.println("\n" + repeat("=", 60));
             System.out.println("To connect to Oracle database:");
             System.out.println("  1. Add Oracle JDBC driver to classpath");
             System.out.println("  2. Set ORACLE_DSN, ORACLE_USER, ORACLE_PASSWORD env vars");
             System.out.println("  3. Call encryptAndStore() and fetchAndDecrypt()");
-            System.out.println("=".repeat(60));
+            System.out.println(repeat("=", 60));
 
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());

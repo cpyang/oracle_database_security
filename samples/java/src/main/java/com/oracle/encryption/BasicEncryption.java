@@ -122,13 +122,21 @@ public class BasicEncryption {
         return Base64.getEncoder().encodeToString(secretKey.getEncoded());
     }
 
+    private static String repeat(String s, int count) {
+        StringBuilder sb = new StringBuilder(s.length() * count);
+        for (int i = 0; i < count; i++) {
+            sb.append(s);
+        }
+        return sb.toString();
+    }
+
     /**
      * Demonstrates basic encryption and decryption.
      */
     public static void main(String[] args) {
-        System.out.println("=".repeat(60));
+        System.out.println(repeat("=", 60));
         System.out.println("Basic Encryption Demo (AES-GCM)");
-        System.out.println("=".repeat(60));
+        System.out.println(repeat("=", 60));
 
         try {
             // Create encryption instance
@@ -146,9 +154,9 @@ public class BasicEncryption {
             String decrypted = decryptor.decrypt(encrypted);
             System.out.println("Decrypted: " + decrypted);
 
-            System.out.println("\n" + "=".repeat(60));
+            System.out.println("\n" + repeat("=", 60));
             System.out.println("Demo completed successfully!");
-            System.out.println("=".repeat(60));
+            System.out.println(repeat("=", 60));
 
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
