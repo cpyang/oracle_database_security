@@ -11,8 +11,7 @@ namespace OracleDataSecurity.Samples.CSharp
     /// </summary>
     public class OracleCryptoSample
     {
-        private const int GcmIvLength = 12;  // 96 bits
-        private const int GcmTagLength = 128; // 128 bits
+        private const int IvLength = 16;  // 128 bits (AES block size)
 
         private readonly byte[] _key;
         private readonly RandomNumberGenerator _rng;
@@ -48,7 +47,7 @@ namespace OracleDataSecurity.Samples.CSharp
                 throw new ArgumentException("Plaintext cannot be null or empty.", nameof(plaintext));
 
             byte[] plaintextBytes = Encoding.UTF8.GetBytes(plaintext);
-            byte[] iv = new byte[GcmIvLength];
+            byte[] iv = new byte[IvLength];
             _rng.GetBytes(iv);
 
             using var aes = Aes.Create();
@@ -87,10 +86,10 @@ namespace OracleDataSecurity.Samples.CSharp
                 throw new ArgumentException("Ciphertext cannot be null or empty.", nameof(ciphertext));
 
             byte[] ivAndCiphertext = Convert.FromBase64String(ciphertext);
-            byte[] iv = new byte[GcmIvLength];
-            byte[] ciphertextBytes = new byte[ivAndCiphertext.Length - GcmIvLength];
-            Array.Copy(ivAndCiphertext, 0, iv, 0, GcmIvLength);
-            Array.Copy(ivAndCiphertext, GcmIvLength, ciphertextBytes, 0, ciphertextBytes.Length);
+            byte[] iv = new byte[IvLength];
+            byte[] ciphertextBytes = new byte[ivAndCiphertext.Length - IvLength];
+            Array.Copy(ivAndCiphertext, 0, iv, 0, IvLength);
+            Array.Copy(ivAndCiphertext, IvLength, ciphertextBytes, 0, ciphertextBytes.Length);
 
             using var aes = Aes.Create();
             aes.Key = _key;
@@ -118,42 +117,6 @@ namespace OracleDataSecurity.Samples.CSharp
         public string GetKey()
         {
             return Convert.ToBase64String(_key);
-        }
-
-        /// <summary>
-        /// Demonstrates basic encryption and decryption.
-        /// </summary>
-        public static void Main()
-        {
-            Console.WriteLine(new string('=', 60));
-            Console.WriteLine("Basic Encryption Demo (C#)");
-            Console.WriteLine(new string('=', 60));
-
-            try
-            {
-                // Create encryption instance
-                var sample = new OracleCryptoSample();
-                Console.WriteLine($"\nGenerated Key: {sample.GetKey()}");
-
-                // Encrypt data
-                string sensitiveData = "Sensitive customer information";
-                string encrypted = sample.Encrypt(sensitiveData);
-                Console.WriteLine($"\nOriginal:  {sensitiveData}");
-                Console.WriteLine($"Encrypted: {encrypted}");
-
-                // Decrypt data
-                var decryptor = new OracleCryptoSample(sample.GetKey());
-                string decrypted = decryptor.Decrypt(encrypted);
-                Console.WriteLine($"Decrypted: {decrypted}");
-
-                Console.WriteLine($"\n{new string('=', 60)}");
-                Console.WriteLine("Demo completed successfully!");
-                Console.WriteLine(new string('=', 60));
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-            }
         }
     }
 }

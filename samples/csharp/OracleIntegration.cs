@@ -2,6 +2,7 @@ using System;
 using System.Data;
 using System.Text;
 using System.Security.Cryptography;
+using Oracle.ManagedDataAccess.Client;
 
 namespace OracleDataSecurity.Samples.CSharp
 {
@@ -44,7 +45,21 @@ namespace OracleDataSecurity.Samples.CSharp
         }
 
         /// <summary>
-        /// Creates an OracleIntegration instance with the provided key and credentials.
+        /// Creates an OracleIntegration instance with a generated key and provided credentials.
+        /// </summary>
+        public OracleIntegration(string dsn, string user, string password)
+        {
+            _key = new byte[32]; // 256-bit key
+            _rng = RandomNumberGenerator.Create();
+            _rng.GetBytes(_key);
+
+            _dsn = dsn;
+            _user = user;
+            _password = password;
+        }
+
+        /// <summary>
+        /// Creates an OracleIntegration instance with the provided base64-encoded key and credentials.
         /// </summary>
         public OracleIntegration(string base64Key, string dsn, string user, string password)
         {
@@ -200,6 +215,28 @@ namespace OracleDataSecurity.Samples.CSharp
         }
 
         /// <summary>
+        /// Executes a raw SQL statement (CREATE, INSERT, DELETE, etc.).
+        /// </summary>
+        /// <param name="sql">The SQL statement to execute</param>
+        /// <returns>Number of rows affected</returns>
+        public int ExecuteNonQuery(string sql)
+        {
+            try
+            {
+                using var connection = GetOracleConnection();
+                connection.Open();
+
+                using var command = new OracleCommand(sql, connection);
+                return command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"  SQL execution failed: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
         /// Gets an Oracle database connection.
         /// </summary>
         private OracleConnection GetOracleConnection()
@@ -214,45 +251,6 @@ namespace OracleDataSecurity.Samples.CSharp
         public string GetKey()
         {
             return Convert.ToBase64String(_key);
-        }
-
-        /// <summary>
-        /// Demonstrates Oracle database encryption integration.
-        /// </summary>
-        public static void Main()
-        {
-            Console.WriteLine(new string('=', 60));
-            Console.WriteLine("Oracle Database Encryption Integration Demo");
-            Console.WriteLine(new string('=', 60));
-
-            try
-            {
-                // Create encryption manager
-                var manager = new OracleIntegration();
-
-                // Example: encrypt data before storing
-                string sensitiveData = "Customer SSN: 123-45-6789";
-                string encrypted = manager.Encrypt(sensitiveData);
-                Console.WriteLine($"\nOriginal:  {sensitiveData}");
-                Console.WriteLine($"Encrypted: {encrypted}");
-
-                // Example: decrypt data after retrieving
-                string decrypted = manager.Decrypt(encrypted);
-                Console.WriteLine($"Decrypted: {decrypted}");
-
-                Console.WriteLine($"\nKey: {manager.GetKey()}");
-
-                Console.WriteLine($"\n{new string('=', 60)}");
-                Console.WriteLine("To connect to Oracle database:");
-                Console.WriteLine("  1. Add ODP.NET package: dotnet add package Oracle.ManagedDataAccess");
-                Console.WriteLine("  2. Set ORACLE_DSN, ORACLE_USER, ORACLE_PASSWORD env vars");
-                Console.WriteLine("  3. Call EncryptAndStore() and FetchAndDecrypt()");
-                Console.WriteLine(new string('=', 60));
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-            }
         }
     }
 }
